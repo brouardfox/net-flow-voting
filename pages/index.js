@@ -134,4 +134,4 @@ export default function NetFlowVotingApp() {
     </div>
   );
 }
-"changed to make candidates and matchup results stay on screen"
+"changed to make candidates and matchup results stay on screen, and adding a reset button"
