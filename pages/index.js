@@ -33,7 +33,7 @@ export default function NetFlowVotingApp() {
     let comparisons = [];
     for (let i = 0; i < items.length; i++) {
       for (let j = i + 1; j < items.length; j++) {
-        comparisons.push([items[i], items[j]]);
+        comparisons.push({ pair: [items[i], items[j]], winner: null });
       }
     }
     setPairwiseComparisons(comparisons);
@@ -50,6 +50,15 @@ export default function NetFlowVotingApp() {
       return newMatrix;
     });
 
+    setPairwiseComparisons((prevComparisons) => {
+      let updatedComparisons = prevComparisons.map((comp) =>
+        comp.pair.includes(winner) && comp.pair.includes(loser)
+          ? { ...comp, winner }
+          : comp
+      );
+      return updatedComparisons;
+    });
+
     let remainingComparisons = pairwiseComparisons.slice(1);
     setPairwiseComparisons(remainingComparisons);
     setCurrentPair(remainingComparisons.length > 0 ? remainingComparisons[0] : null);
@@ -57,6 +66,14 @@ export default function NetFlowVotingApp() {
 
   const displayResults = () => {
     setShowResults(true);
+  };
+
+  const restartVoting = () => {
+    setItems([]);
+    setPairwiseComparisons([]);
+    setPreferenceMatrix({});
+    setCurrentPair(null);
+    setShowResults(false);
   };
 
   return (
@@ -77,15 +94,26 @@ export default function NetFlowVotingApp() {
           <li key={index} className="p-1 border-b">{item}</li>
         ))}
       </ul>
+      <div className="mt-4">
+        <h2 className="text-lg font-bold">Pairwise Matchups</h2>
+        <ul>
+          {pairwiseComparisons.map((comp, index) => (
+            <li key={index} className="flex justify-between p-1 border-b">
+              {comp.pair[0]} vs. {comp.pair[1]} 
+              <span className="font-bold text-green-600">{comp.winner ? `Winner: ${comp.winner}` : "Pending"}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
       {currentPair ? (
         <div className="mt-4">
           <h2 className="text-lg font-bold">Choose Preference Strength</h2>
-          <p>{currentPair[0]} vs. {currentPair[1]}</p>
+          <p>{currentPair.pair[0]} vs. {currentPair.pair[1]}</p>
           <div className="flex gap-2 mt-2">
-            <button onClick={() => recordPreference(currentPair[0], currentPair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Slightly Prefer {currentPair[0]}</button>
-            <button onClick={() => recordPreference(currentPair[0], currentPair[1], 2)} className="bg-green-700 text-white px-2 py-1 rounded">Strongly Prefer {currentPair[0]}</button>
-            <button onClick={() => recordPreference(currentPair[1], currentPair[0], 1)} className="bg-red-500 text-white px-2 py-1 rounded">Slightly Prefer {currentPair[1]}</button>
-            <button onClick={() => recordPreference(currentPair[1], currentPair[0], 2)} className="bg-red-700 text-white px-2 py-1 rounded">Strongly Prefer {currentPair[1]}</button>
+            <button onClick={() => recordPreference(currentPair.pair[0], currentPair.pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Slightly Prefer {currentPair.pair[0]}</button>
+            <button onClick={() => recordPreference(currentPair.pair[0], currentPair.pair[1], 2)} className="bg-green-700 text-white px-2 py-1 rounded">Strongly Prefer {currentPair.pair[0]}</button>
+            <button onClick={() => recordPreference(currentPair.pair[1], currentPair.pair[0], 1)} className="bg-red-500 text-white px-2 py-1 rounded">Slightly Prefer {currentPair.pair[1]}</button>
+            <button onClick={() => recordPreference(currentPair.pair[1], currentPair.pair[0], 2)} className="bg-red-700 text-white px-2 py-1 rounded">Strongly Prefer {currentPair.pair[1]}</button>
           </div>
         </div>
       ) : (
@@ -93,6 +121,7 @@ export default function NetFlowVotingApp() {
           <div>
             <p className="text-green-600">Voting complete! Check your preference rankings.</p>
             <button onClick={displayResults} className="mt-4 bg-purple-500 text-white px-4 py-2 rounded">Show Results</button>
+            <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded ml-2">Restart</button>
           </div>
         )
       )}
@@ -105,5 +134,4 @@ export default function NetFlowVotingApp() {
     </div>
   );
 }
-
-"Updated index.js with result button"
+"changed to make candidates and matchup results stay on screen"
