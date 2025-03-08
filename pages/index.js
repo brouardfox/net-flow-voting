@@ -6,6 +6,7 @@ export default function NetFlowVotingApp() {
   const [pairwiseComparisons, setPairwiseComparisons] = useState([]);
   const [preferenceMatrix, setPreferenceMatrix] = useState({});
   const [currentPair, setCurrentPair] = useState(null);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
     if (items.length > 1) {
@@ -54,6 +55,10 @@ export default function NetFlowVotingApp() {
     setCurrentPair(remainingComparisons.length > 0 ? remainingComparisons[0] : null);
   };
 
+  const displayResults = () => {
+    setShowResults(true);
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Net Flow Voting</h1>
@@ -84,8 +89,21 @@ export default function NetFlowVotingApp() {
           </div>
         </div>
       ) : (
-        items.length > 1 && <p className="text-green-600">Voting complete! Check your preference rankings.</p>
+        items.length > 1 && (
+          <div>
+            <p className="text-green-600">Voting complete! Check your preference rankings.</p>
+            <button onClick={displayResults} className="mt-4 bg-purple-500 text-white px-4 py-2 rounded">Show Results</button>
+          </div>
+        )
+      )}
+      {showResults && (
+        <div className="mt-4 p-4 border rounded bg-gray-100">
+          <h2 className="text-lg font-bold">Results</h2>
+          <pre className="text-sm text-gray-700">{JSON.stringify(preferenceMatrix, null, 2)}</pre>
+        </div>
       )}
     </div>
   );
 }
+
+"Updated index.js with result button"
