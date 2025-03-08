@@ -33,7 +33,7 @@ export default function NetFlowVotingApp() {
     let comparisons = [];
     for (let i = 0; i < items.length; i++) {
       for (let j = i + 1; j < items.length; j++) {
-        comparisons.push({ pair: [items[i], items[j]], winner: null });
+        comparisons.push({ pair: [items[i], items[j]], winner: null, strength: 0 });
       }
     }
     setPairwiseComparisons(comparisons);
@@ -53,7 +53,7 @@ export default function NetFlowVotingApp() {
     setPairwiseComparisons((prevComparisons) => {
       let updatedComparisons = prevComparisons.map((comp) =>
         comp.pair.includes(winner) && comp.pair.includes(loser)
-          ? { ...comp, winner }
+          ? { ...comp, winner, strength }
           : comp
       );
       return updatedComparisons;
@@ -89,22 +89,24 @@ export default function NetFlowVotingApp() {
         />
         <button onClick={addItem} className="bg-blue-500 text-white px-4 py-2 rounded">Add Item</button>
       </div>
-      <ul className="mb-4">
-        {items.map((item, index) => (
-          <li key={index} className="p-1 border-b">{item}</li>
-        ))}
-      </ul>
-      <div className="mt-4">
-        <h2 className="text-lg font-bold">Pairwise Matchups</h2>
-        <ul>
+      <table className="w-full mt-4 border-collapse border border-gray-400">
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="border border-gray-400 p-2">Matchup</th>
+            <th className="border border-gray-400 p-2">Winner</th>
+            <th className="border border-gray-400 p-2">Strength</th>
+          </tr>
+        </thead>
+        <tbody>
           {pairwiseComparisons.map((comp, index) => (
-            <li key={index} className="flex justify-between p-1 border-b">
-              {comp.pair[0]} vs. {comp.pair[1]} 
-              <span className="font-bold text-green-600">{comp.winner ? `Winner: ${comp.winner}` : "Pending"}</span>
-            </li>
+            <tr key={index} className="border border-gray-400">
+              <td className="border border-gray-400 p-2">{comp.pair[0]} vs. {comp.pair[1]}</td>
+              <td className="border border-gray-400 p-2 font-bold text-green-600">{comp.winner ? comp.winner : "Pending"}</td>
+              <td className="border border-gray-400 p-2">{comp.winner ? comp.strength : "-"}</td>
+            </tr>
           ))}
-        </ul>
-      </div>
+        </tbody>
+      </table>
       {currentPair ? (
         <div className="mt-4">
           <h2 className="text-lg font-bold">Choose Preference Strength</h2>
@@ -125,13 +127,7 @@ export default function NetFlowVotingApp() {
           </div>
         )
       )}
-      {showResults && (
-        <div className="mt-4 p-4 border rounded bg-gray-100">
-          <h2 className="text-lg font-bold">Results</h2>
-          <pre className="text-sm text-gray-700">{JSON.stringify(preferenceMatrix, null, 2)}</pre>
-        </div>
-      )}
     </div>
   );
 }
-"changed to make candidates and matchup results stay on screen, and adding a reset button"
+"added table results instead of script results"
