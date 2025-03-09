@@ -8,7 +8,7 @@ export default function NetFlowVotingApp() {
   const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.4";
+  const version = "1.1.6";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -32,6 +32,7 @@ export default function NetFlowVotingApp() {
     setPreferenceMatrices(matrices);
     setCurrentVoter(0);
     setCurrentPairIndex(0);
+    setShowResults(false);
   };
 
   const recordPreference = (i, j, value) => {
@@ -77,10 +78,6 @@ export default function NetFlowVotingApp() {
     return null;
   };
 
-  const aggregatedMatrix = preferenceMatrices.length > 0 ? preferenceMatrices.reduce((aggMatrix, voterMatrix) => {
-    return aggMatrix.map((row, i) => row.map((cell, j) => cell + (voterMatrix?.[i]?.[j] || 0)));
-  }, Array(items.length).fill(null).map(() => Array(items.length).fill(0))) : [];
-
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Net Flow Voting</h1>
@@ -104,37 +101,28 @@ export default function NetFlowVotingApp() {
           className="border p-2 w-16"
         />
       </div>
-      {showResults ? (
-        <div>
-          {aggregatedMatrix.length > 0 && (
-            <>
-              <h2 className="text-lg font-bold mt-4">Aggregated Results</h2>
-              <table className="w-full mt-2 border-collapse border border-gray-400">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="border border-gray-400 p-2">Candidates</th>
-                    {items.map((item, index) => (
-                      <th key={index} className="border border-gray-400 p-2">{item}</th>
-                    ))}
-                    <th className="border border-gray-400 p-2">Net Flow Score</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {aggregatedMatrix.map((row, i) => (
-                    <tr key={i} className="border border-gray-400">
-                      <td className="border border-gray-400 p-2 font-bold">{items[i]}</td>
-                      {row.map((cell, j) => (
-                        <td key={j} className="border border-gray-400 p-2 text-center">{cell}</td>
-                      ))}
-                      <td className="border border-gray-400 p-2 font-bold text-blue-600">{calculateNetFlowScores(aggregatedMatrix)[i]}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
-          )}
+      {!showResults && items.length > 1 && (
+        <div className="mt-4">
+          <h2 className="text-lg font-bold">Voter {currentVoter + 1}, Choose Preference</h2>
+          {(() => {
+            const pair = getPairFromIndex(currentPairIndex);
+            if (!pair) return null;
+            return (
+              <div>
+                <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
+                  <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
+                  <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
-      ) : (null)}
+      )}
+      {!showResults && items.length > 1 && (
+        <button onClick={() => setShowResults(true)} className="mt-4 bg-yellow-500 text-white px-4 py-2 rounded">Show Results</button>
+      )}
       {showResults && (
         <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
       )}
