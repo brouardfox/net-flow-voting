@@ -8,7 +8,7 @@ export default function NetFlowVotingApp() {
   const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.6";
+  const version = "1.1.7";
 
   useEffect(() => {
     if (items.length > 1) {
