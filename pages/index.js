@@ -8,7 +8,7 @@ export default function NetFlowVotingApp() {
   const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.7";
+  const version = "1.1.8";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -59,6 +59,20 @@ export default function NetFlowVotingApp() {
     return matrix.map(row => row.reduce((acc, val) => acc + val, 0));
   };
 
+  const aggregateMatrix = () => {
+    const size = items.length;
+    let aggregatedMatrix = Array(size).fill(null).map(() => Array(size).fill(0));
+    
+    preferenceMatrices.forEach(matrix => {
+      matrix.forEach((row, i) => {
+        row.forEach((value, j) => {
+          aggregatedMatrix[i][j] += value;
+        });
+      });
+    });
+    return aggregatedMatrix;
+  };
+
   const restartVoting = () => {
     setItems([]);
     setPreferenceMatrices([]);
@@ -102,29 +116,21 @@ export default function NetFlowVotingApp() {
         />
       </div>
       {!showResults && items.length > 1 && (
-        <div className="mt-4">
-          <h2 className="text-lg font-bold">Voter {currentVoter + 1}, Choose Preference</h2>
-          {(() => {
-            const pair = getPairFromIndex(currentPairIndex);
-            if (!pair) return null;
-            return (
-              <div>
-                <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
-                  <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
-                  <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      )}
-      {!showResults && items.length > 1 && (
         <button onClick={() => setShowResults(true)} className="mt-4 bg-yellow-500 text-white px-4 py-2 rounded">Show Results</button>
       )}
       {showResults && (
-        <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
+        <div className="mt-6">
+          <h2 className="text-lg font-bold">Aggregated Results</h2>
+          <pre>{JSON.stringify(aggregateMatrix(), null, 2)}</pre>
+          <h3 className="text-md font-bold mt-4">Individual Voter Preferences</h3>
+          {preferenceMatrices.map((matrix, index) => (
+            <div key={index} className="mt-4">
+              <h4 className="text-md font-bold">Voter {index + 1}</h4>
+              <pre>{JSON.stringify(matrix, null, 2)}</pre>
+            </div>
+          ))}
+          <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
+        </div>
       )}
     </div>
   );
