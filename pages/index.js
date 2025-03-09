@@ -3,25 +3,16 @@ import React, { useState, useEffect } from "react";
 export default function NetFlowVotingApp() {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState("");
-  const [pairwiseComparisons, setPairwiseComparisons] = useState([]);
-  const [preferenceMatrix, setPreferenceMatrix] = useState({});
-  const [currentPair, setCurrentPair] = useState(null);
+  const [preferenceMatrix, setPreferenceMatrix] = useState([]);
+  const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.0.1";
+  const version = "1.0.2";
 
   useEffect(() => {
     if (items.length > 1) {
-      generatePairwiseComparisons();
+      initializeMatrix();
     }
   }, [items]);
-
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js').then(() => {
-        console.log("Service Worker Registered");
-      });
-    }
-  }, []);
 
   const addItem = () => {
     if (newItem.trim() !== "") {
@@ -30,51 +21,43 @@ export default function NetFlowVotingApp() {
     }
   };
 
-  const generatePairwiseComparisons = () => {
-    let comparisons = [];
-    for (let i = 0; i < items.length; i++) {
-      for (let j = i + 1; j < items.length; j++) {
-        comparisons.push({ pair: [items[i], items[j]], winner: null, strength: 0 });
-      }
-    }
-    setPairwiseComparisons(comparisons);
-    setCurrentPair(comparisons.length > 0 ? comparisons[0] : null);
+  const initializeMatrix = () => {
+    const size = items.length;
+    let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
+    setPreferenceMatrix(matrix);
   };
 
-  const recordPreference = (winner, loser, strength) => {
+  const recordPreference = (i, j, value) => {
     setPreferenceMatrix((prevMatrix) => {
-      let newMatrix = { ...prevMatrix };
-      if (!newMatrix[winner]) newMatrix[winner] = {};
-      if (!newMatrix[loser]) newMatrix[loser] = {};
-      newMatrix[winner][loser] = (newMatrix[winner][loser] || 0) + strength;
-      newMatrix[loser][winner] = (newMatrix[loser][winner] || 0) - strength;
+      const newMatrix = prevMatrix.map(row => [...row]);
+      newMatrix[i][j] = value;
+      newMatrix[j][i] = -value;
       return newMatrix;
     });
 
-    setPairwiseComparisons((prevComparisons) => {
-      let updatedComparisons = prevComparisons.map((comp) =>
-        comp.pair.includes(winner) && comp.pair.includes(loser)
-          ? { ...comp, winner, strength }
-          : comp
-      );
-      return updatedComparisons;
-    });
-
-    let remainingComparisons = pairwiseComparisons.slice(1);
-    setPairwiseComparisons(remainingComparisons);
-    setCurrentPair(remainingComparisons.length > 0 ? remainingComparisons[0] : null);
-  };
-
-  const displayResults = () => {
-    setShowResults(true);
+    if (currentPairIndex < (items.length * (items.length - 1)) / 2 - 1) {
+      setCurrentPairIndex(currentPairIndex + 1);
+    } else {
+      setShowResults(true);
+    }
   };
 
   const restartVoting = () => {
     setItems([]);
-    setPairwiseComparisons([]);
-    setPreferenceMatrix({});
-    setCurrentPair(null);
+    setPreferenceMatrix([]);
+    setCurrentPairIndex(0);
     setShowResults(false);
+  };
+
+  const getPairFromIndex = (index) => {
+    let count = 0;
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        if (count === index) return [i, j];
+        count++;
+      }
+    }
+    return null;
   };
 
   return (
@@ -91,45 +74,52 @@ export default function NetFlowVotingApp() {
         />
         <button onClick={addItem} className="bg-blue-500 text-white px-4 py-2 rounded">Add Item</button>
       </div>
-      {showResults && (
+      {showResults ? (
         <table className="w-full mt-4 border-collapse border border-gray-400">
           <thead>
             <tr className="bg-gray-200">
-              <th className="border border-gray-400 p-2">Matchup</th>
-              <th className="border border-gray-400 p-2">Winner</th>
-              <th className="border border-gray-400 p-2">Strength</th>
+              <th className="border border-gray-400 p-2">Candidates</th>
+              {items.map((item, index) => (
+                <th key={index} className="border border-gray-400 p-2">{item}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {pairwiseComparisons.map((comp, index) => (
-              <tr key={index} className="border border-gray-400">
-                <td className="border border-gray-400 p-2">{comp.pair[0]} vs. {comp.pair[1]}</td>
-                <td className="border border-gray-400 p-2 font-bold text-green-600">{comp.winner ? comp.winner : "Pending"}</td>
-                <td className="border border-gray-400 p-2">{comp.winner ? comp.strength : "-"}</td>
+            {preferenceMatrix.map((row, i) => (
+              <tr key={i} className="border border-gray-400">
+                <td className="border border-gray-400 p-2 font-bold">{items[i]}</td>
+                {row.map((cell, j) => (
+                  <td key={j} className="border border-gray-400 p-2 text-center">
+                    {i === j ? "-" : cell}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
-      )}
-      {currentPair ? (
-        <div className="mt-4">
-          <h2 className="text-lg font-bold">Choose Preference Strength</h2>
-          <p>{currentPair.pair[0]} vs. {currentPair.pair[1]}</p>
-          <div className="flex gap-2 mt-2">
-            <button onClick={() => recordPreference(currentPair.pair[0], currentPair.pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Slightly Prefer {currentPair.pair[0]}</button>
-            <button onClick={() => recordPreference(currentPair.pair[0], currentPair.pair[1], 2)} className="bg-green-700 text-white px-2 py-1 rounded">Strongly Prefer {currentPair.pair[0]}</button>
-            <button onClick={() => recordPreference(currentPair.pair[1], currentPair.pair[0], 1)} className="bg-red-500 text-white px-2 py-1 rounded">Slightly Prefer {currentPair.pair[1]}</button>
-            <button onClick={() => recordPreference(currentPair.pair[1], currentPair.pair[0], 2)} className="bg-red-700 text-white px-2 py-1 rounded">Strongly Prefer {currentPair.pair[1]}</button>
-          </div>
-        </div>
       ) : (
-        items.length > 1 && (
-          <div>
-            <p className="text-green-600">Voting complete! Check your preference rankings.</p>
-            <button onClick={displayResults} className="mt-4 bg-purple-500 text-white px-4 py-2 rounded">Show Results</button>
-            <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded ml-2">Restart</button>
+        items.length > 1 && currentPairIndex < (items.length * (items.length - 1)) / 2 && (
+          <div className="mt-4">
+            <h2 className="text-lg font-bold">Choose Preference</h2>
+            {(() => {
+              const pair = getPairFromIndex(currentPairIndex);
+              if (!pair) return null;
+              return (
+                <div>
+                  <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
+                    <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
+                    <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )
+      )}
+      {showResults && (
+        <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
       )}
     </div>
   );
