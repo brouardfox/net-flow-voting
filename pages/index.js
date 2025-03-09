@@ -6,7 +6,7 @@ export default function NetFlowVotingApp() {
   const [preferenceMatrix, setPreferenceMatrix] = useState([]);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.0.2";
+  const version = "1.0.3";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -23,7 +23,9 @@ export default function NetFlowVotingApp() {
 
   const initializeMatrix = () => {
     const size = items.length;
-    let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
+    let matrix = Array(size).fill(null).map((_, i) => 
+      Array(size).fill(0).map((_, j) => (i === j ? 0 : 0))
+    );
     setPreferenceMatrix(matrix);
   };
 
@@ -40,6 +42,10 @@ export default function NetFlowVotingApp() {
     } else {
       setShowResults(true);
     }
+  };
+
+  const calculateNetFlowScores = () => {
+    return preferenceMatrix.map(row => row.reduce((acc, val) => acc + val, 0));
   };
 
   const restartVoting = () => {
@@ -60,6 +66,8 @@ export default function NetFlowVotingApp() {
     return null;
   };
 
+  const netFlowScores = calculateNetFlowScores();
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Net Flow Voting</h1>
@@ -75,28 +83,30 @@ export default function NetFlowVotingApp() {
         <button onClick={addItem} className="bg-blue-500 text-white px-4 py-2 rounded">Add Item</button>
       </div>
       {showResults ? (
-        <table className="w-full mt-4 border-collapse border border-gray-400">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border border-gray-400 p-2">Candidates</th>
-              {items.map((item, index) => (
-                <th key={index} className="border border-gray-400 p-2">{item}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {preferenceMatrix.map((row, i) => (
-              <tr key={i} className="border border-gray-400">
-                <td className="border border-gray-400 p-2 font-bold">{items[i]}</td>
-                {row.map((cell, j) => (
-                  <td key={j} className="border border-gray-400 p-2 text-center">
-                    {i === j ? "-" : cell}
-                  </td>
+        <div>
+          <table className="w-full mt-4 border-collapse border border-gray-400">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border border-gray-400 p-2">Candidates</th>
+                {items.map((item, index) => (
+                  <th key={index} className="border border-gray-400 p-2">{item}</th>
                 ))}
+                <th className="border border-gray-400 p-2">Net Flow Score</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {preferenceMatrix.map((row, i) => (
+                <tr key={i} className="border border-gray-400">
+                  <td className="border border-gray-400 p-2 font-bold">{items[i]}</td>
+                  {row.map((cell, j) => (
+                    <td key={j} className="border border-gray-400 p-2 text-center">{cell}</td>
+                  ))}
+                  <td className="border border-gray-400 p-2 font-bold text-blue-600">{netFlowScores[i]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         items.length > 1 && currentPairIndex < (items.length * (items.length - 1)) / 2 && (
           <div className="mt-4">
