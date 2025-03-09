@@ -4,15 +4,15 @@ export default function NetFlowVotingApp() {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState("");
   const [numVoters, setNumVoters] = useState(1);
-  const [preferenceMatrix, setPreferenceMatrix] = useState([]);
+  const [preferenceMatrices, setPreferenceMatrices] = useState([]);
   const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.2";
+  const version = "1.1.3";
 
   useEffect(() => {
     if (items.length > 1) {
-      initializeMatrix();
+      initializeMatrices();
     }
   }, [items]);
 
@@ -23,20 +23,22 @@ export default function NetFlowVotingApp() {
     }
   };
 
-  const initializeMatrix = () => {
+  const initializeMatrices = () => {
     const size = items.length;
-    let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
-    setPreferenceMatrix(matrix);
+    let matrices = Array(numVoters).fill(null).map(() =>
+      Array(size).fill(null).map(() => Array(size).fill(0))
+    );
+    setPreferenceMatrices(matrices);
     setCurrentVoter(0);
     setCurrentPairIndex(0);
   };
 
   const recordPreference = (i, j, value) => {
-    setPreferenceMatrix((prevMatrix) => {
-      const newMatrix = prevMatrix.map(row => [...row]);
-      newMatrix[i][j] += value;
-      newMatrix[j][i] -= value;
-      return newMatrix;
+    setPreferenceMatrices((prevMatrices) => {
+      const newMatrices = prevMatrices.map(matrix => matrix.map(row => [...row]));
+      newMatrices[currentVoter][i][j] += value;
+      newMatrices[currentVoter][j][i] -= value;
+      return newMatrices;
     });
 
     if (currentPairIndex < (items.length * (items.length - 1)) / 2 - 1) {
@@ -51,13 +53,13 @@ export default function NetFlowVotingApp() {
     }
   };
 
-  const calculateNetFlowScores = () => {
-    return preferenceMatrix.map(row => row.reduce((acc, val) => acc + val, 0));
+  const calculateNetFlowScores = (matrix) => {
+    return matrix.map(row => row.reduce((acc, val) => acc + val, 0));
   };
 
   const restartVoting = () => {
     setItems([]);
-    setPreferenceMatrix([]);
+    setPreferenceMatrices([]);
     setCurrentVoter(0);
     setCurrentPairIndex(0);
     setShowResults(false);
@@ -74,7 +76,9 @@ export default function NetFlowVotingApp() {
     return null;
   };
 
-  const netFlowScores = calculateNetFlowScores();
+  const aggregatedMatrix = preferenceMatrices.reduce((aggMatrix, voterMatrix) => {
+    return aggMatrix.map((row, i) => row.map((cell, j) => cell + voterMatrix[i][j]));
+  }, Array(items.length).fill(null).map(() => Array(items.length).fill(0)));
 
   return (
     <div className="p-4">
@@ -101,7 +105,8 @@ export default function NetFlowVotingApp() {
       </div>
       {showResults ? (
         <div>
-          <table className="w-full mt-4 border-collapse border border-gray-400">
+          <h2 className="text-lg font-bold mt-4">Aggregated Results</h2>
+          <table className="w-full mt-2 border-collapse border border-gray-400">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-400 p-2">Candidates</th>
@@ -112,39 +117,46 @@ export default function NetFlowVotingApp() {
               </tr>
             </thead>
             <tbody>
-              {preferenceMatrix.map((row, i) => (
+              {aggregatedMatrix.map((row, i) => (
                 <tr key={i} className="border border-gray-400">
                   <td className="border border-gray-400 p-2 font-bold">{items[i]}</td>
                   {row.map((cell, j) => (
                     <td key={j} className="border border-gray-400 p-2 text-center">{cell}</td>
                   ))}
-                  <td className="border border-gray-400 p-2 font-bold text-blue-600">{netFlowScores[i]}</td>
+                  <td className="border border-gray-400 p-2 font-bold text-blue-600">{calculateNetFlowScores(aggregatedMatrix)[i]}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {preferenceMatrices.map((matrix, v) => (
+            <div key={v} className="mt-6">
+              <h3 className="text-md font-bold">Voter {v + 1} Preferences</h3>
+              <table className="w-full mt-2 border-collapse border border-gray-400">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="border border-gray-400 p-2">Candidates</th>
+                    {items.map((item, index) => (
+                      <th key={index} className="border border-gray-400 p-2">{item}</th>
+                    ))}
+                    <th className="border border-gray-400 p-2">Net Flow Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {matrix.map((row, i) => (
+                    <tr key={i} className="border border-gray-400">
+                      <td className="border border-gray-400 p-2 font-bold">{items[i]}</td>
+                      {row.map((cell, j) => (
+                        <td key={j} className="border border-gray-400 p-2 text-center">{cell}</td>
+                      ))}
+                      <td className="border border-gray-400 p-2 font-bold text-blue-600">{calculateNetFlowScores(matrix)[i]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
         </div>
-      ) : (
-        items.length > 1 && currentPairIndex < (items.length * (items.length - 1)) / 2 && (
-          <div className="mt-4">
-            <h2 className="text-lg font-bold">Voter {currentVoter + 1}, Choose Preference</h2>
-            {(() => {
-              const pair = getPairFromIndex(currentPairIndex);
-              if (!pair) return null;
-              return (
-                <div>
-                  <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
-                    <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
-                    <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        )
-      )}
+      ) : (null)}
       {showResults && (
         <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
       )}
