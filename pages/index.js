@@ -8,7 +8,7 @@ export default function NetFlowVotingApp() {
   const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.5";
+  const version = "1.1.4";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -55,24 +55,6 @@ export default function NetFlowVotingApp() {
     }
   };
 
-  const calculateNetFlowScores = (matrix) => {
-    return matrix.map(row => row.reduce((acc, val) => acc + val, 0));
-  };
-
-  const aggregateMatrix = () => {
-    const size = items.length;
-    let aggregatedMatrix = Array(size).fill(null).map(() => Array(size).fill(0));
-    
-    preferenceMatrices.forEach(matrix => {
-      matrix.forEach((row, i) => {
-        row.forEach((value, j) => {
-          aggregatedMatrix[i][j] += value;
-        });
-      });
-    });
-    return aggregatedMatrix;
-  };
-
   const restartVoting = () => {
     setItems([]);
     setPreferenceMatrices([]);
@@ -115,7 +97,7 @@ export default function NetFlowVotingApp() {
           className="border p-2 w-16"
         />
       </div>
-      {!showResults && currentPairIndex < (items.length * (items.length - 1)) / 2 && (
+      {!showResults && (
         <div className="mt-4">
           <h2 className="text-lg font-bold">Voter {currentVoter + 1}, Choose Preference</h2>
           {(() => {
@@ -135,19 +117,7 @@ export default function NetFlowVotingApp() {
         </div>
       )}
       {showResults && (
-        <div className="mt-6">
-          <h2 className="text-lg font-bold">Aggregated Results</h2>
-          <table className="border-collapse border border-gray-400">
-            {aggregateMatrix().map((row, i) => (
-              <tr key={i} className="border border-gray-400">
-                {row.map((cell, j) => (
-                  <td key={j} className="border border-gray-400 p-2">{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </table>
-          <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
-        </div>
+        <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
       )}
     </div>
   );
