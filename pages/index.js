@@ -5,9 +5,10 @@ export default function NetFlowVotingApp() {
   const [newItem, setNewItem] = useState("");
   const [numVoters, setNumVoters] = useState(1);
   const [preferenceMatrix, setPreferenceMatrix] = useState([]);
+  const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.0";
+  const version = "1.1.1";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -26,6 +27,8 @@ export default function NetFlowVotingApp() {
     const size = items.length;
     let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
     setPreferenceMatrix(matrix);
+    setCurrentVoter(0);
+    setCurrentPairIndex(0);
   };
 
   const recordPreference = (i, j, value) => {
@@ -35,22 +38,16 @@ export default function NetFlowVotingApp() {
       newMatrix[j][i] -= value;
       return newMatrix;
     });
-  };
 
-  const handleMultipleVoters = (i, j) => {
-    for (let v = 0; v < numVoters; v++) {
-      const vote = window.confirm(`Voter ${v + 1}: Prefer ${items[i]} over ${items[j]}? (OK for Yes, Cancel for No)`);
-      if (vote) {
-        recordPreference(i, j, 1);
-      } else {
-        recordPreference(i, j, -1);
-      }
-    }
-
-    if (currentPairIndex < (items.length * (items.length - 1)) / 2 - 1) {
-      setCurrentPairIndex(currentPairIndex + 1);
+    if (currentVoter < numVoters - 1) {
+      setCurrentVoter(currentVoter + 1);
     } else {
-      setShowResults(true);
+      setCurrentVoter(0);
+      if (currentPairIndex < (items.length * (items.length - 1)) / 2 - 1) {
+        setCurrentPairIndex(currentPairIndex + 1);
+      } else {
+        setShowResults(true);
+      }
     }
   };
 
@@ -61,6 +58,7 @@ export default function NetFlowVotingApp() {
   const restartVoting = () => {
     setItems([]);
     setPreferenceMatrix([]);
+    setCurrentVoter(0);
     setCurrentPairIndex(0);
     setShowResults(false);
   };
@@ -129,14 +127,18 @@ export default function NetFlowVotingApp() {
       ) : (
         items.length > 1 && currentPairIndex < (items.length * (items.length - 1)) / 2 && (
           <div className="mt-4">
-            <h2 className="text-lg font-bold">Choose Preference</h2>
+            <h2 className="text-lg font-bold">Voter {currentVoter + 1}, Choose Preference</h2>
             {(() => {
               const pair = getPairFromIndex(currentPairIndex);
               if (!pair) return null;
               return (
                 <div>
                   <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
-                  <button onClick={() => handleMultipleVoters(pair[0], pair[1])} className="bg-green-500 text-white px-4 py-2 rounded">Start Voting</button>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
+                    <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
+                    <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
+                  </div>
                 </div>
               );
             })()}
