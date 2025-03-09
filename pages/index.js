@@ -3,10 +3,11 @@ import React, { useState, useEffect } from "react";
 export default function NetFlowVotingApp() {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState("");
+  const [numVoters, setNumVoters] = useState(1);
   const [preferenceMatrix, setPreferenceMatrix] = useState([]);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.0.3";
+  const version = "1.1.0";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -23,19 +24,28 @@ export default function NetFlowVotingApp() {
 
   const initializeMatrix = () => {
     const size = items.length;
-    let matrix = Array(size).fill(null).map((_, i) => 
-      Array(size).fill(0).map((_, j) => (i === j ? 0 : 0))
-    );
+    let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
     setPreferenceMatrix(matrix);
   };
 
   const recordPreference = (i, j, value) => {
     setPreferenceMatrix((prevMatrix) => {
       const newMatrix = prevMatrix.map(row => [...row]);
-      newMatrix[i][j] = value;
-      newMatrix[j][i] = -value;
+      newMatrix[i][j] += value;
+      newMatrix[j][i] -= value;
       return newMatrix;
     });
+  };
+
+  const handleMultipleVoters = (i, j) => {
+    for (let v = 0; v < numVoters; v++) {
+      const vote = window.confirm(`Voter ${v + 1}: Prefer ${items[i]} over ${items[j]}? (OK for Yes, Cancel for No)`);
+      if (vote) {
+        recordPreference(i, j, 1);
+      } else {
+        recordPreference(i, j, -1);
+      }
+    }
 
     if (currentPairIndex < (items.length * (items.length - 1)) / 2 - 1) {
       setCurrentPairIndex(currentPairIndex + 1);
@@ -82,6 +92,15 @@ export default function NetFlowVotingApp() {
         />
         <button onClick={addItem} className="bg-blue-500 text-white px-4 py-2 rounded">Add Item</button>
       </div>
+      <div className="mb-4">
+        <label className="mr-2">Number of Voters:</label>
+        <input
+          type="number"
+          value={numVoters}
+          onChange={(e) => setNumVoters(parseInt(e.target.value) || 1)}
+          className="border p-2 w-16"
+        />
+      </div>
       {showResults ? (
         <div>
           <table className="w-full mt-4 border-collapse border border-gray-400">
@@ -117,11 +136,7 @@ export default function NetFlowVotingApp() {
               return (
                 <div>
                   <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
-                    <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
-                    <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
-                  </div>
+                  <button onClick={() => handleMultipleVoters(pair[0], pair[1])} className="bg-green-500 text-white px-4 py-2 rounded">Start Voting</button>
                 </div>
               );
             })()}
