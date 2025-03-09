@@ -7,6 +7,7 @@ export default function NetFlowVotingApp() {
   const [preferenceMatrix, setPreferenceMatrix] = useState({});
   const [currentPair, setCurrentPair] = useState(null);
   const [showResults, setShowResults] = useState(false);
+  const version = "1.0.1";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -79,6 +80,7 @@ export default function NetFlowVotingApp() {
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Net Flow Voting</h1>
+      <p className="text-sm text-gray-500">Version: {version}</p>
       <div className="mb-4">
         <input
           type="text"
