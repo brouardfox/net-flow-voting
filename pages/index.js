@@ -8,7 +8,7 @@ export default function NetFlowVotingApp() {
   const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.1";
+  const version = "1.1.2";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -39,12 +39,12 @@ export default function NetFlowVotingApp() {
       return newMatrix;
     });
 
-    if (currentVoter < numVoters - 1) {
-      setCurrentVoter(currentVoter + 1);
+    if (currentPairIndex < (items.length * (items.length - 1)) / 2 - 1) {
+      setCurrentPairIndex(currentPairIndex + 1);
     } else {
-      setCurrentVoter(0);
-      if (currentPairIndex < (items.length * (items.length - 1)) / 2 - 1) {
-        setCurrentPairIndex(currentPairIndex + 1);
+      if (currentVoter < numVoters - 1) {
+        setCurrentVoter(currentVoter + 1);
+        setCurrentPairIndex(0);
       } else {
         setShowResults(true);
       }
