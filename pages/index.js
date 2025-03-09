@@ -8,13 +8,13 @@ export default function NetFlowVotingApp() {
   const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.3";
+  const version = "1.1.4";
 
   useEffect(() => {
     if (items.length > 1) {
       initializeMatrices();
     }
-  }, [items]);
+  }, [items, numVoters]);
 
   const addItem = () => {
     if (newItem.trim() !== "") {
@@ -25,6 +25,7 @@ export default function NetFlowVotingApp() {
 
   const initializeMatrices = () => {
     const size = items.length;
+    if (size < 2) return;
     let matrices = Array(numVoters).fill(null).map(() =>
       Array(size).fill(null).map(() => Array(size).fill(0))
     );
@@ -76,9 +77,9 @@ export default function NetFlowVotingApp() {
     return null;
   };
 
-  const aggregatedMatrix = preferenceMatrices.reduce((aggMatrix, voterMatrix) => {
-    return aggMatrix.map((row, i) => row.map((cell, j) => cell + voterMatrix[i][j]));
-  }, Array(items.length).fill(null).map(() => Array(items.length).fill(0)));
+  const aggregatedMatrix = preferenceMatrices.length > 0 ? preferenceMatrices.reduce((aggMatrix, voterMatrix) => {
+    return aggMatrix.map((row, i) => row.map((cell, j) => cell + (voterMatrix?.[i]?.[j] || 0)));
+  }, Array(items.length).fill(null).map(() => Array(items.length).fill(0))) : [];
 
   return (
     <div className="p-4">
@@ -105,32 +106,9 @@ export default function NetFlowVotingApp() {
       </div>
       {showResults ? (
         <div>
-          <h2 className="text-lg font-bold mt-4">Aggregated Results</h2>
-          <table className="w-full mt-2 border-collapse border border-gray-400">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border border-gray-400 p-2">Candidates</th>
-                {items.map((item, index) => (
-                  <th key={index} className="border border-gray-400 p-2">{item}</th>
-                ))}
-                <th className="border border-gray-400 p-2">Net Flow Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {aggregatedMatrix.map((row, i) => (
-                <tr key={i} className="border border-gray-400">
-                  <td className="border border-gray-400 p-2 font-bold">{items[i]}</td>
-                  {row.map((cell, j) => (
-                    <td key={j} className="border border-gray-400 p-2 text-center">{cell}</td>
-                  ))}
-                  <td className="border border-gray-400 p-2 font-bold text-blue-600">{calculateNetFlowScores(aggregatedMatrix)[i]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {preferenceMatrices.map((matrix, v) => (
-            <div key={v} className="mt-6">
-              <h3 className="text-md font-bold">Voter {v + 1} Preferences</h3>
+          {aggregatedMatrix.length > 0 && (
+            <>
+              <h2 className="text-lg font-bold mt-4">Aggregated Results</h2>
               <table className="w-full mt-2 border-collapse border border-gray-400">
                 <thead>
                   <tr className="bg-gray-200">
@@ -142,19 +120,19 @@ export default function NetFlowVotingApp() {
                   </tr>
                 </thead>
                 <tbody>
-                  {matrix.map((row, i) => (
+                  {aggregatedMatrix.map((row, i) => (
                     <tr key={i} className="border border-gray-400">
                       <td className="border border-gray-400 p-2 font-bold">{items[i]}</td>
                       {row.map((cell, j) => (
                         <td key={j} className="border border-gray-400 p-2 text-center">{cell}</td>
                       ))}
-                      <td className="border border-gray-400 p-2 font-bold text-blue-600">{calculateNetFlowScores(matrix)[i]}</td>
+                      <td className="border border-gray-400 p-2 font-bold text-blue-600">{calculateNetFlowScores(aggregatedMatrix)[i]}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          ))}
+            </>
+          )}
         </div>
       ) : (null)}
       {showResults && (
