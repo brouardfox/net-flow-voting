@@ -9,7 +9,7 @@ export default function NetFlowVotingApp() {
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [votingStarted, setVotingStarted] = useState(false);
-  const version = "1.2.1";
+  const version = "1.2.3";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -169,11 +169,17 @@ export default function NetFlowVotingApp() {
         <div className="mt-6">
           <h2 className="text-lg font-bold">Results</h2>
 
-          {/* ✅ Display Individual Voter Matrices */}
+          {/* ✅ Display Individual Voter Matrices as Proper Tables */}
           {preferenceMatrices.map((matrix, voterIndex) => (
             <div key={voterIndex} className="mt-4">
               <h3 className="text-md font-bold">Voter {voterIndex + 1} Preference Matrix</h3>
-              <pre>{JSON.stringify(matrix, null, 2)}</pre>
+              <table className="border-collapse border border-gray-400">
+                {matrix.map((row, i) => (
+                  <tr key={i}>
+                    {row.map((cell, j) => <td key={j} className="border p-2">{cell}</td>)}
+                  </tr>
+                ))}
+              </table>
             </div>
           ))}
 
@@ -195,4 +201,3 @@ export default function NetFlowVotingApp() {
     </div>
   );
 }
-
