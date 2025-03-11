@@ -9,7 +9,7 @@ export default function NetFlowVotingApp() {
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [votingStarted, setVotingStarted] = useState(false);
-  const version = "1.2.3";
+  const version = "1.2.4";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -96,6 +96,11 @@ export default function NetFlowVotingApp() {
     return netMatrix;
   };
 
+  // ✅ Compute Net Flow Scores from a matrix
+  const computeNetFlowScores = (matrix) => {
+    return matrix.map(row => row.reduce((sum, val) => sum + val, 0));
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Net Flow Voting</h1>
@@ -122,19 +127,6 @@ export default function NetFlowVotingApp() {
               <li key={index} className="text-gray-700">{item}</li>
             ))}
           </ul>
-        </div>
-      )}
-
-      {/* ✅ Number of Voters Selection */}
-      {items.length > 1 && !votingStarted && (
-        <div className="mb-4">
-          <label className="mr-2">Number of Voters:</label>
-          <input
-            type="number"
-            value={numVoters}
-            onChange={(e) => setNumVoters(parseInt(e.target.value) || 1)}
-            className="border p-2 w-16"
-          />
         </div>
       )}
 
@@ -169,7 +161,7 @@ export default function NetFlowVotingApp() {
         <div className="mt-6">
           <h2 className="text-lg font-bold">Results</h2>
 
-          {/* ✅ Display Individual Voter Matrices as Proper Tables */}
+          {/* ✅ Display Individual Voter Matrices & Net Flow Scores */}
           {preferenceMatrices.map((matrix, voterIndex) => (
             <div key={voterIndex} className="mt-4">
               <h3 className="text-md font-bold">Voter {voterIndex + 1} Preference Matrix</h3>
@@ -180,10 +172,11 @@ export default function NetFlowVotingApp() {
                   </tr>
                 ))}
               </table>
+              <p><strong>Net Flow Scores:</strong> {computeNetFlowScores(matrix).map((score, i) => `${items[i]}: ${score}`).join(", ")}</p>
             </div>
           ))}
 
-          {/* ✅ Display Total Preference Matrix */}
+          {/* ✅ Display Total Preference Matrix & Net Flow Scores */}
           <div className="mt-6">
             <h3 className="text-md font-bold">Total Preference Matrix</h3>
             <table className="border-collapse border border-gray-400">
@@ -193,6 +186,7 @@ export default function NetFlowVotingApp() {
                 </tr>
               ))}
             </table>
+            <p><strong>Total Net Flow Scores:</strong> {computeNetFlowScores(computeNetPreferenceMatrix()).map((score, i) => `${items[i]}: ${score}`).join(", ")}</p>
           </div>
 
           <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
