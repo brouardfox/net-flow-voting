@@ -9,7 +9,7 @@ export default function NetFlowVotingApp() {
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [votingStarted, setVotingStarted] = useState(false);
-  const version = "1.1.9";
+  const version = "1.2.0";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -130,6 +130,19 @@ export default function NetFlowVotingApp() {
         </div>
       )}
 
+      {/* ✅ Number of Voters Selection */}
+      {items.length > 1 && !votingStarted && (
+        <div className="mb-4">
+          <label className="mr-2">Number of Voters:</label>
+          <input
+            type="number"
+            value={numVoters}
+            onChange={(e) => setNumVoters(parseInt(e.target.value) || 1)}
+            className="border p-2 w-16"
+          />
+        </div>
+      )}
+
       {/* ✅ Start Voting Button (Only appears when 2+ candidates exist) */}
       {items.length > 1 && !votingStarted && (
         <button onClick={startVoting} className="bg-green-500 text-white px-4 py-2 rounded">Start Voting</button>
@@ -176,16 +189,6 @@ export default function NetFlowVotingApp() {
               </table>
             </div>
           ))}
-
-          {/* ✅ Display Combined Net Preference Matrix */}
-          <h3 className="text-md font-bold mt-4">Net Preference Matrix</h3>
-          <table className="border-collapse border border-gray-400">
-            {computeNetPreferenceMatrix().map((row, i) => (
-              <tr key={i}>
-                {row.map((cell, j) => <td key={j} className="border p-2">{cell}</td>)}
-              </tr>
-            ))}
-          </table>
 
           <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
         </div>
