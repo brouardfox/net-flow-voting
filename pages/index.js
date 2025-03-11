@@ -9,13 +9,13 @@ export default function NetFlowVotingApp() {
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [votingStarted, setVotingStarted] = useState(false);
-  const version = "1.2.5";
+  const version = "1.2.6";
 
   useEffect(() => {
     if (items.length > 1) {
       initializeMatrices();
     }
-  }, [items, numVoters]);
+  }, [items]);
 
   const addItem = () => {
     if (newItem.trim() !== "") {
@@ -25,13 +25,16 @@ export default function NetFlowVotingApp() {
   };
 
   const startVoting = () => {
-    setVotingStarted(true);
+    if (items.length > 1 && numVoters > 0) {
+      setVotingStarted(true);
+      initializeMatrices(numVoters); // Ensure voter count is stored correctly
+    }
   };
 
-  const initializeMatrices = () => {
+  const initializeMatrices = (voters) => {
     const size = items.length;
     if (size < 2) return;
-    let matrices = Array(numVoters).fill(null).map(() =>
+    let matrices = Array(voters).fill(null).map(() =>
       Array(size).fill(null).map(() => Array(size).fill(0))
     );
     setPreferenceMatrices(matrices);
@@ -80,7 +83,6 @@ export default function NetFlowVotingApp() {
     return null;
   };
 
-  // ✅ Compute the net preference matrix (sum of all individual votes)
   const computeNetPreferenceMatrix = () => {
     const size = items.length;
     let netMatrix = Array(size).fill(null).map(() => Array(size).fill(0));
@@ -96,7 +98,6 @@ export default function NetFlowVotingApp() {
     return netMatrix;
   };
 
-  // ✅ Compute Net Flow Scores from a matrix
   const computeNetFlowScores = (matrix) => {
     return matrix.map(row => row.reduce((sum, val) => sum + val, 0));
   };
@@ -130,8 +131,8 @@ export default function NetFlowVotingApp() {
         </div>
       )}
 
-      {/* ✅ Number of Voters Selection */}
-      {items.length > 1 && !votingStarted && (
+      {/* ✅ Number of Voters Selection - Ensure voter count persists */}
+      {!votingStarted && items.length > 1 && (
         <div className="mb-4">
           <label className="mr-2">Number of Voters:</label>
           <input
@@ -144,7 +145,7 @@ export default function NetFlowVotingApp() {
       )}
 
       {/* ✅ Start Voting Button */}
-      {items.length > 1 && !votingStarted && (
+      {!votingStarted && items.length > 1 && (
         <button onClick={startVoting} className="bg-green-500 text-white px-4 py-2 rounded">Start Voting</button>
       )}
 
