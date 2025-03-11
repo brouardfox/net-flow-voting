@@ -9,7 +9,7 @@ export default function NetFlowVotingApp() {
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [votingStarted, setVotingStarted] = useState(false);
-  const version = "1.2.4";
+  const version = "1.2.5";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -130,30 +130,22 @@ export default function NetFlowVotingApp() {
         </div>
       )}
 
+      {/* ✅ Number of Voters Selection */}
+      {items.length > 1 && !votingStarted && (
+        <div className="mb-4">
+          <label className="mr-2">Number of Voters:</label>
+          <input
+            type="number"
+            value={numVoters}
+            onChange={(e) => setNumVoters(parseInt(e.target.value) || 1)}
+            className="border p-2 w-16"
+          />
+        </div>
+      )}
+
       {/* ✅ Start Voting Button */}
       {items.length > 1 && !votingStarted && (
         <button onClick={startVoting} className="bg-green-500 text-white px-4 py-2 rounded">Start Voting</button>
-      )}
-
-      {/* ✅ Voting Section */}
-      {votingStarted && !showResults && preferenceMatrices.length > 0 && (
-        <div className="mt-4">
-          <h2 className="text-lg font-bold">Voter {currentVoter + 1}, Choose Preference</h2>
-          {(() => {
-            const pair = getPairFromIndex(currentPairIndex);
-            if (!pair) return null;
-            return (
-              <div>
-                <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
-                  <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
-                  <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
       )}
 
       {/* ✅ Results Section */}
@@ -172,7 +164,21 @@ export default function NetFlowVotingApp() {
                   </tr>
                 ))}
               </table>
-              <p><strong>Net Flow Scores:</strong> {computeNetFlowScores(matrix).map((score, i) => `${items[i]}: ${score}`).join(", ")}</p>
+
+              {/* ✅ Display Net Flow Scores in Table */}
+              <h4 className="font-bold mt-2">Net Flow Scores</h4>
+              <table className="border-collapse border border-gray-400">
+                <tr>
+                  <th className="border p-2">Candidate</th>
+                  <th className="border p-2">Score</th>
+                </tr>
+                {computeNetFlowScores(matrix).map((score, i) => (
+                  <tr key={i}>
+                    <td className="border p-2">{items[i]}</td>
+                    <td className="border p-2">{score}</td>
+                  </tr>
+                ))}
+              </table>
             </div>
           ))}
 
@@ -186,7 +192,21 @@ export default function NetFlowVotingApp() {
                 </tr>
               ))}
             </table>
-            <p><strong>Total Net Flow Scores:</strong> {computeNetFlowScores(computeNetPreferenceMatrix()).map((score, i) => `${items[i]}: ${score}`).join(", ")}</p>
+
+            {/* ✅ Display Total Net Flow Scores in Table */}
+            <h4 className="font-bold mt-2">Total Net Flow Scores</h4>
+            <table className="border-collapse border border-gray-400">
+              <tr>
+                <th className="border p-2">Candidate</th>
+                <th className="border p-2">Score</th>
+              </tr>
+              {computeNetFlowScores(computeNetPreferenceMatrix()).map((score, i) => (
+                <tr key={i}>
+                  <td className="border p-2">{items[i]}</td>
+                  <td className="border p-2">{score}</td>
+                </tr>
+              ))}
+            </table>
           </div>
 
           <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
