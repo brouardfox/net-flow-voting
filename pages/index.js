@@ -8,7 +8,7 @@ export default function NetFlowVotingApp() {
   const [currentVoter, setCurrentVoter] = useState(0);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.7";
+  const version = "1.1.8";  // Updated version number
 
   useEffect(() => {
     if (items.length > 1) {
@@ -74,6 +74,27 @@ export default function NetFlowVotingApp() {
     return null;
   };
 
+  // ✅ Compute the net preference matrix (sum of all individual votes)
+  const computeNetPreferenceMatrix = () => {
+    const size = items.length;
+    let netMatrix = Array(size).fill(null).map(() => Array(size).fill(0));
+
+    preferenceMatrices.forEach(matrix => {
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          netMatrix[i][j] += matrix[i][j];
+        }
+      }
+    });
+
+    return netMatrix;
+  };
+
+  // ✅ Compute net flow scores for all candidates
+  const computeNetFlowScores = (matrix) => {
+    return matrix.map(row => row.reduce((sum, value) => sum + value, 0));
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Net Flow Voting</h1>
@@ -107,27 +128,9 @@ export default function NetFlowVotingApp() {
               <div>
                 <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
                 <div className="flex gap-2 mt-2">
-                  <button 
-                    onClick={() => recordPreference(pair[0], pair[1], 1)} 
-                    className="bg-green-500 text-white px-2 py-1 rounded"
-                    disabled={preferenceMatrices.length === 0} // Prevents voting before initialization
-                  >
-                    Prefer {items[pair[0]]}
-                  </button>
-                  <button 
-                    onClick={() => recordPreference(pair[0], pair[1], -1)} 
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                    disabled={preferenceMatrices.length === 0}
-                  >
-                    Prefer {items[pair[1]]}
-                  </button>
-                  <button 
-                    onClick={() => recordPreference(pair[0], pair[1], 0)} 
-                    className="bg-gray-500 text-white px-2 py-1 rounded"
-                    disabled={preferenceMatrices.length === 0}
-                  >
-                    No Preference
-                  </button>
+                  <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
+                  <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
+                  <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
                 </div>
               </div>
             );
@@ -135,7 +138,31 @@ export default function NetFlowVotingApp() {
         </div>
       )}
       {showResults && (
-        <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
+        <div className="mt-6">
+          <h2 className="text-lg font-bold">Results</h2>
+          
+          {/* ✅ Show Net Preference Matrix */}
+          <h3 className="text-md font-bold mt-4">Net Preference Matrix</h3>
+          <table className="border-collapse border border-gray-400">
+            {computeNetPreferenceMatrix().map((row, i) => (
+              <tr key={i} className="border border-gray-400">
+                {row.map((cell, j) => (
+                  <td key={j} className="border border-gray-400 p-2">{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </table>
+
+          {/* ✅ Show Net Flow Scores */}
+          <h3 className="text-md font-bold mt-4">Net Flow Scores</h3>
+          <ul>
+            {computeNetFlowScores(computeNetPreferenceMatrix()).map((score, i) => (
+              <li key={i}>{items[i]}: {score}</li>
+            ))}
+          </ul>
+
+          <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
+        </div>
       )}
     </div>
   );
