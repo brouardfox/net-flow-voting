@@ -6,7 +6,7 @@ export default function NetFlowVotingApp() {
   const [preferenceMatrix, setPreferenceMatrix] = useState([]);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.0.0.test"; // First working version
+  const version = "1.0.0.test2"; // First working version
 
   const addItem = () => {
     if (newItem.trim() !== "") {
