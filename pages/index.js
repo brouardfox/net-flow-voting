@@ -9,7 +9,7 @@ export default function NetFlowVotingApp() {
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [votingStarted, setVotingStarted] = useState(false);
-  const version = "1.2.0";
+  const version = "1.2.1";
 
   useEffect(() => {
     if (items.length > 1) {
@@ -96,11 +96,6 @@ export default function NetFlowVotingApp() {
     return netMatrix;
   };
 
-  // ✅ Compute net flow scores for all candidates
-  const computeNetFlowScores = (matrix) => {
-    return matrix.map(row => row.reduce((sum, value) => sum + value, 0));
-  };
-
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Net Flow Voting</h1>
@@ -143,12 +138,12 @@ export default function NetFlowVotingApp() {
         </div>
       )}
 
-      {/* ✅ Start Voting Button (Only appears when 2+ candidates exist) */}
+      {/* ✅ Start Voting Button */}
       {items.length > 1 && !votingStarted && (
         <button onClick={startVoting} className="bg-green-500 text-white px-4 py-2 rounded">Start Voting</button>
       )}
 
-      {/* ✅ Voting Section (Only visible after "Start Voting") */}
+      {/* ✅ Voting Section */}
       {votingStarted && !showResults && preferenceMatrices.length > 0 && (
         <div className="mt-4">
           <h2 className="text-lg font-bold">Voter {currentVoter + 1}, Choose Preference</h2>
@@ -178,17 +173,21 @@ export default function NetFlowVotingApp() {
           {preferenceMatrices.map((matrix, voterIndex) => (
             <div key={voterIndex} className="mt-4">
               <h3 className="text-md font-bold">Voter {voterIndex + 1} Preference Matrix</h3>
-              <table className="border-collapse border border-gray-400">
-                {matrix.map((row, i) => (
-                  <tr key={i} className="border border-gray-400">
-                    {row.map((cell, j) => (
-                      <td key={j} className="border border-gray-400 p-2">{cell}</td>
-                    ))}
-                  </tr>
-                ))}
-              </table>
+              <pre>{JSON.stringify(matrix, null, 2)}</pre>
             </div>
           ))}
+
+          {/* ✅ Display Total Preference Matrix */}
+          <div className="mt-6">
+            <h3 className="text-md font-bold">Total Preference Matrix</h3>
+            <table className="border-collapse border border-gray-400">
+              {computeNetPreferenceMatrix().map((row, i) => (
+                <tr key={i}>
+                  {row.map((cell, j) => <td key={j} className="border p-2">{cell}</td>)}
+                </tr>
+              ))}
+            </table>
+          </div>
 
           <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
         </div>
@@ -196,3 +195,4 @@ export default function NetFlowVotingApp() {
     </div>
   );
 }
+
