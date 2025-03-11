@@ -83,7 +83,7 @@ export default function NetFlowVotingApp() {
         </button>
       )}
 
-      {!showResults && currentPairIndex < (items.length * (items.length - 1)) / 2 && (
+      {!showResults && currentPairIndex < (items.length * (items.length - 1)) / 2 && preferenceMatrix.length > 0 && (
         <div className="mt-4">
           <h2 className="text-lg font-bold">Choose Preference</h2>
           {(() => {
@@ -93,13 +93,25 @@ export default function NetFlowVotingApp() {
               <div>
                 <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
                 <div className="flex gap-2 mt-2">
-                  <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">
+                  <button 
+                    onClick={() => recordPreference(pair[0], pair[1], 1)} 
+                    className="bg-green-500 text-white px-2 py-1 rounded"
+                    disabled={preferenceMatrix.length === 0} // Prevents clicking before voting starts
+                  >
                     Prefer {items[pair[0]]}
                   </button>
-                  <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">
+                  <button 
+                    onClick={() => recordPreference(pair[0], pair[1], -1)} 
+                    className="bg-red-500 text-white px-2 py-1 rounded"
+                    disabled={preferenceMatrix.length === 0} // Prevents clicking before voting starts
+                  >
                     Prefer {items[pair[1]]}
                   </button>
-                  <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">
+                  <button 
+                    onClick={() => recordPreference(pair[0], pair[1], 0)} 
+                    className="bg-gray-500 text-white px-2 py-1 rounded"
+                    disabled={preferenceMatrix.length === 0} // Prevents clicking before voting starts
+                  >
                     No Preference
                   </button>
                 </div>
