@@ -9,11 +9,11 @@ export default function NetFlowVotingApp() {
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [votingStarted, setVotingStarted] = useState(false);
-  const version = "1.2.6";
+  const version = "1.2.7";
 
   useEffect(() => {
     if (items.length > 1) {
-      initializeMatrices();
+      initializeMatrices(numVoters);
     }
   }, [items]);
 
@@ -27,7 +27,7 @@ export default function NetFlowVotingApp() {
   const startVoting = () => {
     if (items.length > 1 && numVoters > 0) {
       setVotingStarted(true);
-      initializeMatrices(numVoters); // Ensure voter count is stored correctly
+      initializeMatrices(numVoters);
     }
   };
 
@@ -131,7 +131,7 @@ export default function NetFlowVotingApp() {
         </div>
       )}
 
-      {/* ✅ Number of Voters Selection - Ensure voter count persists */}
+      {/* ✅ Number of Voters Selection - Only hides AFTER voting starts */}
       {!votingStarted && items.length > 1 && (
         <div className="mb-4">
           <label className="mr-2">Number of Voters:</label>
@@ -144,73 +144,47 @@ export default function NetFlowVotingApp() {
         </div>
       )}
 
-      {/* ✅ Start Voting Button */}
+      {/* ✅ Start Voting Button - Only hides AFTER voting starts */}
       {!votingStarted && items.length > 1 && (
         <button onClick={startVoting} className="bg-green-500 text-white px-4 py-2 rounded">Start Voting</button>
       )}
 
-      {/* ✅ Results Section */}
+      {/* ✅ Display Preference Selection AFTER Voting Starts */}
+      {votingStarted && !showResults && (
+        <div className="mt-4">
+          <h2 className="text-lg font-bold">Voter {currentVoter + 1}, Choose Preference</h2>
+          {(() => {
+            const pair = getPairFromIndex(currentPairIndex);
+            if (!pair) return null;
+            return (
+              <div>
+                <p>{items[pair[0]]} vs. {items[pair[1]]}</p>
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => recordPreference(pair[0], pair[1], 1)} className="bg-green-500 text-white px-2 py-1 rounded">Prefer {items[pair[0]]}</button>
+                  <button onClick={() => recordPreference(pair[0], pair[1], -1)} className="bg-red-500 text-white px-2 py-1 rounded">Prefer {items[pair[1]]}</button>
+                  <button onClick={() => recordPreference(pair[0], pair[1], 0)} className="bg-gray-500 text-white px-2 py-1 rounded">No Preference</button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ✅ Restart Button Always Available */}
+      <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
+
+      {/* ✅ Show Results After Voting */}
       {showResults && (
         <div className="mt-6">
           <h2 className="text-lg font-bold">Results</h2>
-
-          {/* ✅ Display Individual Voter Matrices & Net Flow Scores */}
-          {preferenceMatrices.map((matrix, voterIndex) => (
-            <div key={voterIndex} className="mt-4">
-              <h3 className="text-md font-bold">Voter {voterIndex + 1} Preference Matrix</h3>
-              <table className="border-collapse border border-gray-400">
-                {matrix.map((row, i) => (
-                  <tr key={i}>
-                    {row.map((cell, j) => <td key={j} className="border p-2">{cell}</td>)}
-                  </tr>
-                ))}
-              </table>
-
-              {/* ✅ Display Net Flow Scores in Table */}
-              <h4 className="font-bold mt-2">Net Flow Scores</h4>
-              <table className="border-collapse border border-gray-400">
-                <tr>
-                  <th className="border p-2">Candidate</th>
-                  <th className="border p-2">Score</th>
-                </tr>
-                {computeNetFlowScores(matrix).map((score, i) => (
-                  <tr key={i}>
-                    <td className="border p-2">{items[i]}</td>
-                    <td className="border p-2">{score}</td>
-                  </tr>
-                ))}
-              </table>
-            </div>
-          ))}
-
-          {/* ✅ Display Total Preference Matrix & Net Flow Scores */}
-          <div className="mt-6">
-            <h3 className="text-md font-bold">Total Preference Matrix</h3>
-            <table className="border-collapse border border-gray-400">
-              {computeNetPreferenceMatrix().map((row, i) => (
-                <tr key={i}>
-                  {row.map((cell, j) => <td key={j} className="border p-2">{cell}</td>)}
-                </tr>
-              ))}
-            </table>
-
-            {/* ✅ Display Total Net Flow Scores in Table */}
-            <h4 className="font-bold mt-2">Total Net Flow Scores</h4>
-            <table className="border-collapse border border-gray-400">
-              <tr>
-                <th className="border p-2">Candidate</th>
-                <th className="border p-2">Score</th>
+          <h3 className="text-md font-bold">Total Preference Matrix</h3>
+          <table className="border-collapse border border-gray-400">
+            {computeNetPreferenceMatrix().map((row, i) => (
+              <tr key={i}>
+                {row.map((cell, j) => <td key={j} className="border p-2">{cell}</td>)}
               </tr>
-              {computeNetFlowScores(computeNetPreferenceMatrix()).map((score, i) => (
-                <tr key={i}>
-                  <td className="border p-2">{items[i]}</td>
-                  <td className="border p-2">{score}</td>
-                </tr>
-              ))}
-            </table>
-          </div>
-
-          <button onClick={restartVoting} className="mt-4 bg-red-500 text-white px-4 py-2 rounded">Restart</button>
+            ))}
+          </table>
         </div>
       )}
     </div>
