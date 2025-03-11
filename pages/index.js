@@ -3,11 +3,10 @@ import React, { useState } from "react";
 export default function NetFlowVotingApp() {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState("");
-  const [numVoters, setNumVoters] = useState(1);
   const [preferenceMatrix, setPreferenceMatrix] = useState([]);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const version = "1.1.1b";
+  const version = "1.0.0.test"; // First working version
 
   const addItem = () => {
     if (newItem.trim() !== "") {
@@ -76,16 +75,6 @@ export default function NetFlowVotingApp() {
           placeholder="Enter an item"
         />
         <button onClick={addItem} className="bg-blue-500 text-white px-4 py-2 rounded">Add Item</button>
-      </div>
-
-      <div className="mb-4">
-        <label className="mr-2">Number of Voters:</label>
-        <input
-          type="number"
-          value={numVoters}
-          onChange={(e) => setNumVoters(parseInt(e.target.value) || 1)}
-          className="border p-2 w-16"
-        />
       </div>
 
       {items.length > 1 && !showResults && (
